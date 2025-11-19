@@ -5,6 +5,8 @@ import AddBook from './components/AddBook';
 import Sidebar from './components/Sidebar';
 import ConfirmModal from './components/ConfirmModal';
 import Header from './components/Header';
+import SearchBar from './components/SearchBar';
+import Pagination from './components/Pagination';
 import { initialBooks } from './data/books.js';
 
 function App() {
@@ -13,13 +15,16 @@ function App() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [bookToEdit, setBookToEdit] = useState(null);
   const [bookToDelete, setBookToDelete] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [booksPerPage] = useState(8);
 
   useEffect(() => {
     try {
       const storedBooks = localStorage.getItem('books');
       if (storedBooks) {
         const parsedBooks = JSON.parse(storedBooks);
-        if (Array.isArray(parsedBooks)) {
+        if (Array.isArray(parsedBooks) && parsedBooks.length > 0) {
           setBooks(parsedBooks);
         } else {
           setBooks(initialBooks);
@@ -34,10 +39,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    try {
-        localStorage.setItem('books', JSON.stringify(books));
-    } catch (error) {
-        console.error("Failed to save books to localStorage", error);
+    if (books.length > 0) {
+      try {
+          localStorage.setItem('books', JSON.stringify(books));
+      } catch (error) {
+          console.error("Failed to save books to localStorage", error);
+      }
     }
   }, [books]);
 
@@ -66,7 +73,12 @@ function App() {
   };
 
   const handleConfirmRemove = () => {
-    setBooks(books.filter((book) => book.id !== bookToDelete));
+    let updatedBooks = books.filter((book) => book.id !== bookToDelete);
+    if (updatedBooks.length === 0) {
+      localStorage.removeItem('books');
+      updatedBooks = initialBooks;
+    }
+    setBooks(updatedBooks);
     setIsConfirmModalOpen(false);
     setBookToDelete(null);
   };
@@ -76,19 +88,48 @@ function App() {
     setBookToDelete(null);
   };
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const filteredBooks = books.filter((book) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      book.title.toLowerCase().includes(query) ||
+      book.author.toLowerCase().includes(query) ||
+      book.genre.toLowerCase().includes(query)
+    );
+  });
+
+  const indexOfLastBook = currentPage * booksPerPage;
+  const indexOfFirstBook = indexOfLastBook - booksPerPage;
+  const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook);
+
   return (
     <div className="App">
       <Header
         bookCount={books.length}
         onAddBook={() => setIsModalOpen(true)}
       />
+      <SearchBar onSearch={handleSearch} />
 
       <div className="main-content">
         <div className="book-list-container">
           <BookList
-            books={books}
+            books={currentBooks}
             onRemove={handleRemoveRequest}
             onEdit={handleEditBook}
+          />
+          <Pagination
+            booksPerPage={booksPerPage}
+            totalBooks={filteredBooks.length}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
           />
         </div>
         <Sidebar books={books} />
