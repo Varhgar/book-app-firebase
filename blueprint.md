@@ -8,7 +8,9 @@ This is a simple book management application that allows users to add, edit, and
 *   **Add/Edit Book:** A modal form that allows users to add new books or edit existing ones.
 *   **Remove Book:** A confirmation modal to prevent accidental book deletions.
 *   **Sidebar:** Displays statistics about the book collection, including the total number of books, top authors, and genre distribution.
+*   **Search:** A search bar to filter books by title, author, or genre.
+*   **Pagination:** A pagination component to navigate through the book list.
 
 ## Current Plan
 
-*   Revert the application to the state before the search bar was added.
+*   The application is in a stable state. Ready for new features or improvements.
